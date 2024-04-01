@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org" lang="en">
+<head>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<link rel="stylesheet"
+	href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
+<link
+	href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+	rel="stylesheet"
+	integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+	crossorigin="anonymous" />
+<script
+	src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+	integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+	crossorigin="anonymous"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard</title>
+
+<style>
+/* Additional CSS styles if needed */
+</style>
+</head>
+<body>
+	<nav
+		class="navbar navbar-expand-lg bg-body-tertiary justify-content-between">
+		<div style="width: 95%"></div>
+		<div style="width: 95%"></div>
+		<div style="width: 95%"></div>
+
+		<div class="container-fluid collapse navbar-collapse">
+			<div class="container-fluid">
+				<ul class="navbar-nav ml-5 pl-5">
+
+					<li class="nav-item dropdown"><a
+						class="dropdown-toggle nav-link" href="#" role="button"
+						data-bs-toggle="dropdown" aria-expanded="false"> <i
+							class="bi bi-person-circle"></i>
+					</a>
+						<ul class="dropdown-menu dropdown-menu-end">
+							<li sec:authorize="isAuthenticated()">
+								<h5 sec:authentication="name" class="p-2 mb-1 text-center"></h5>
+							</li>
+							<li sec:authorize="isAuthenticated()"><hr
+									class="dropdown-divider" /></li>
+							<li sec:authorize="!isAuthenticated()"><a
+								class="dropdown-item" th:href="@{/login}">Login</a></li>
+							<li sec:authorize="!isAuthenticated()"><a
+								class="dropdown-item" th:href="@{/register}">Register</a></li>
+							<li sec:authorize="isAuthenticated()"><a
+								class="dropdown-item" th:href="@{/logout}">Logout</a></li>
+							<li><hr class="dropdown-divider" /></li>
+						</ul></li>
+				</ul>
+			</div>
+		</div>
+	</nav>
+	<div class="container">
+
+		<h2>Welcome to Dashboard</h2>
+		<table class="table table-striped" style="margin-top: 25px">
+			<thead>
+				<tr>
+					<th>Dock Number</th>
+					<th>Status</th>
+					<th>Vehicle Number</th>
+					<th>Action</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:each="dock, rowStat : ${docks}"
+					class="${rowStat.odd ? 'table-primary' : 'table-secondary'}">
+					<td th:text="${dock.dockNumber}" class="align-middle">Dock
+						Number</td>
+					<td th:text="${dock.isActive ? 'Empty' : 'Occupied'}"
+						class="align-middle">Status</td>
+					<td class="align-middle"><span
+						th:each="allocation : ${dock.activeAllocations}"
+						th:text="${allocation.vehicleNumber}"> </span></td>
+					<td class="align-middle">
+						<button class="btn btn-danger undock-btn"
+							th:each="allocation : ${dock.activeAllocations}"
+							th:attr="data-dock-id=${allocation.id}"
+							th:text="'UnDock( ' + ${allocation.vehicleNumber} + ' )'">
+						</button>
+					</td>
+
+					<td class="align-middle">
+						<div class="form-check form-switch">
+							<input type="checkbox" class="form-check-input express-toggle"
+								th:attr="data-dock-id=${dock.id}"
+								th:checked="${dock.isExpress}"
+								> <label
+								class="form-check-label">Express Dock</label>
+						</div>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+
+		<form id="allot-form">
+			<div class="form-group  d-flex">
+				<label for="vehicle-number" style="width: 25%">Vehicle
+					Number:</label> <input type="text" class="form-control" id="vehicle-number"
+					style="width: 50%" name="vehicleNumber" required>
+				<button type="submit" style="margin-left: 25px"
+					class="btn btn-primary">Allot</button>
+
+			</div>
+		</form>
+
+		<form id="waiting-form" style="margin-top: 25px">
+			<div class="form-group d-flex">
+				<label for="waiting-time" style="width: 25%">Waiting Time
+					(in minutes):</label> <input type="number" class="form-control"
+					id="waiting-time" name="waitingTime" min="0" step="1"
+					style="width: 50%">
+				<button type="submit" style="margin-left: 25px"
+					class="btn btn-primary">Allocate with Waiting</button>
+			</div>
+
+		</form>
+		<button style="margin-top: 25px" id="express-toggle"
+			class="btn btn-secondary">Toggle Express Function</button>
+	</div>
+	<script>
+		$(document).ready(
+				function() {
+					// Function to allocate a dock to an incoming vehicle
+
+					$('#allot-form').submit(function(event) {
+						event.preventDefault();
+						var vehicleNumber = $('#vehicle-number').val();
+						$.post("/allocateDock", {
+							vehicleNumber : vehicleNumber
+						}).done(function(response) {
+							// Success callback
+							alert(response);
+							location.reload();
+						}).fail(function(jqXHR, textStatus, errorThrown) {
+							// Error callback
+							console.log(jqXHR)
+							alert(jqXHR.responseText);
+						});
+					});
+
+					$('.undock-btn').click(
+							function() {
+								var dockId = $(this).data('dock-id');
+								// You may need to identify the vehicle number associated with the specific UnDock button
+								var vehicleNumber = ""; // Add logic to retrieve vehicle number associated with this dock
+								$.post("/undock/" + dockId, function(response) {
+									alert("Vehicle " + vehicleNumber
+											+ " undocked successfully");
+									location.reload();
+								});
+							});
+
+					$('.express-toggle').click(
+							function() {
+								var dockId = $(this).data('dock-id');
+							    var isChecked = $(this).prop('checked');
+
+								// You may need to identify the vehicle number associated with the specific UnDock button
+							//	var vehicleNumber = ""; // Add logic to retrieve vehicle number associated with this dock
+								$.post("/express/"+dockId+"/"+isChecked, function(response) {
+									alert(response);
+									location.reload();
+								});
+							});
+
+					// Function to handle waiting allocation
+					$('#waiting-form').submit(function(event) {
+						event.preventDefault();
+						var waitingTime = $('#waiting-time').val();
+						var vehicleNumber = $('#vehicle-number').val();
+
+						$.post("/allocateDockWithWaiting", {
+							waitingTime : waitingTime,
+							vehicleNumber : vehicleNumber
+						}, function(response) {
+							alert(response);
+							location.reload();
+						});
+					});
+
+					// Function to toggle express function
+					$('#express-toggle').click(function() {
+						// Add your logic for express function toggle here
+						alert('Express function toggled');
+					});
+
+					// Function to refresh dock status every couple of minutes
+					setInterval(function() {
+						location.reload();
+					}, 120000);
+				});
+	</script>
+</body>
+</html>
