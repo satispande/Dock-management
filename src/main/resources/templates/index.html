@@ -68,6 +68,10 @@
 					<th>Status</th>
 					<th>Vehicle Number</th>
 					<th>Action</th>
+					<th>Wait Time</th>
+					<th>ETA</th>
+					<th>Express Dock</th>
+					
 				</tr>
 			</thead>
 			<tbody>
@@ -87,6 +91,14 @@
 							th:text="'UnDock( ' + ${allocation.vehicleNumber} + ' )'">
 						</button>
 					</td>
+					<td class="align-middle"><span
+						th:each="allocation : ${dock.activeAllocations}"
+						th:text="${allocation.waitingTime}"> </span></td>
+						
+						<td class="align-middle"><span
+						th:each="allocation : ${dock.activeAllocations}"
+						th:text="${allocation.estimatedTime}"> </span></td>
+					
 
 					<td class="align-middle">
 						<div class="form-check form-switch">
@@ -105,7 +117,12 @@
 			<div class="form-group  d-flex">
 				<label for="vehicle-number" style="width: 25%">Vehicle
 					Number:</label> <input type="text" class="form-control" id="vehicle-number"
-					style="width: 50%" name="vehicleNumber" required>
+					style="width: 25%" name="vehicleNumber" required>
+					
+					<label for="waiting-time" style="width: 25%">Estimated Completion Time
+					(in minutes):</label> <input type="number" class="form-control"
+					id="estimated-time" name="estimatedTime" min="0" step="1"
+					style="width: 25%">
 				<button type="submit" style="margin-left: 25px"
 					class="btn btn-primary">Allot</button>
 
@@ -114,10 +131,6 @@
 
 		<form id="waiting-form" style="margin-top: 25px">
 			<div class="form-group d-flex">
-				<label for="waiting-time" style="width: 25%">Waiting Time
-					(in minutes):</label> <input type="number" class="form-control"
-					id="waiting-time" name="waitingTime" min="0" step="1"
-					style="width: 50%">
 				<button type="submit" style="margin-left: 25px"
 					class="btn btn-primary">Allocate with Waiting</button>
 			</div>
@@ -134,8 +147,11 @@
 					$('#allot-form').submit(function(event) {
 						event.preventDefault();
 						var vehicleNumber = $('#vehicle-number').val();
+						var estimatedTime = $('#estimated-time').val();
+
 						$.post("/allocateDock", {
-							vehicleNumber : vehicleNumber
+							vehicleNumber : vehicleNumber,
+							estimatedTime : estimatedTime
 						}).done(function(response) {
 							// Success callback
 							alert(response);
@@ -175,12 +191,12 @@
 					// Function to handle waiting allocation
 					$('#waiting-form').submit(function(event) {
 						event.preventDefault();
-						var waitingTime = $('#waiting-time').val();
 						var vehicleNumber = $('#vehicle-number').val();
+						var estimatedTime = $('#estimated-time').val();
 
 						$.post("/allocateDockWithWaiting", {
-							waitingTime : waitingTime,
-							vehicleNumber : vehicleNumber
+							vehicleNumber : vehicleNumber,
+							estimatedTime : estimatedTime
 						}, function(response) {
 							alert(response);
 							location.reload();
