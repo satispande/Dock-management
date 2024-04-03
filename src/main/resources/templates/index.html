@@ -24,7 +24,7 @@
 /* Additional CSS styles if needed */
 </style>
 </head>
-<body>
+<body style="font-size: 20px;">
 	<nav
 		class="navbar navbar-expand-lg bg-body-tertiary justify-content-between">
 		<div style="width: 95%"></div>
@@ -61,17 +61,15 @@
 	<div class="container">
 
 		<h2>Welcome to Dashboard</h2>
-		<table class="table table-striped" style="margin-top: 25px">
+		<table class="table table-striped" style="margin-top: 25px;font-size: 22px;" >
 			<thead>
 				<tr>
 					<th>Dock Number</th>
 					<th>Status</th>
 					<th>Vehicle Number</th>
-					<th>Action</th>
-					<th>Wait Time</th>
 					<th>ETA</th>
-					<th>Express Dock</th>
-					
+					<th>Action</th>
+
 				</tr>
 			</thead>
 			<tbody>
@@ -81,63 +79,57 @@
 						Number</td>
 					<td th:text="${dock.isActive ? 'Empty' : 'Occupied'}"
 						class="align-middle">Status</td>
-					<td class="align-middle"><span
-						th:each="allocation : ${dock.activeAllocations}"
-						th:text="${allocation.vehicleNumber}"> </span></td>
+					<td class="align-middle"><span th:text="${dock.vehicleNumber}">
+					</span></td>
+					
+					<td class="align-middle"><span th:text="${dock.estimatedTime}">
+					</span></td>
+					
 					<td class="align-middle">
 						<button class="btn btn-danger undock-btn"
-							th:each="allocation : ${dock.activeAllocations}"
-							th:attr="data-dock-id=${allocation.id}"
-							th:text="'UnDock( ' + ${allocation.vehicleNumber} + ' )'">
+							th:attr="data-dock-id=${dock.allocationId}" th:text="UnDock">
 						</button>
+						&nbsp;&nbsp;
+						<span class=" form-switch">
+							<input type="checkbox" class="form-check-input express-toggle"
+								th:attr="data-dock-id=${dock.id}" th:checked="${dock.isExpress}">
+							<label class="form-check-label">Express Dock</label>
+						</span>
 					</td>
-					<td class="align-middle"><span
-						th:each="allocation : ${dock.activeAllocations}"
-						th:text="${allocation.waitingTime}"> </span></td>
-						
-						<td class="align-middle"><span
-						th:each="allocation : ${dock.activeAllocations}"
-						th:text="${allocation.estimatedTime}"> </span></td>
+
+
 					
 
+
 					<td class="align-middle">
-						<div class="form-check form-switch">
-							<input type="checkbox" class="form-check-input express-toggle"
-								th:attr="data-dock-id=${dock.id}"
-								th:checked="${dock.isExpress}"
-								> <label
-								class="form-check-label">Express Dock</label>
-						</div>
+						
 					</td>
 				</tr>
 			</tbody>
 		</table>
 
-		<form id="allot-form">
+		<form  id="allot-form" style="font-size: 18px;">
 			<div class="form-group  d-flex">
-				<label for="vehicle-number" style="width: 25%">Vehicle
+				<label for="vehicle-number" style="width: 15%">Vehicle
 					Number:</label> <input type="text" class="form-control" id="vehicle-number"
-					style="width: 25%" name="vehicleNumber" required>
-					
-					<label for="waiting-time" style="width: 25%">Estimated Completion Time
-					(in minutes):</label> <input type="number" class="form-control"
+					style="width: 25%" name="vehicleNumber" required> &nbsp;&nbsp;&nbsp;&nbsp; <label
+					for="waiting-time" style="width: 25%">Estimated Completion
+					Time (in minutes):</label> <input type="number" class="form-control"
 					id="estimated-time" name="estimatedTime" min="0" step="1"
-					style="width: 25%">
+					style="width: 10%">
 				<button type="submit" style="margin-left: 25px"
 					class="btn btn-primary">Allot</button>
+				
 
 			</div>
 		</form>
 
-		<form id="waiting-form" style="margin-top: 25px">
-			<div class="form-group d-flex">
-				<button type="submit" style="margin-left: 25px"
-					class="btn btn-primary">Allocate with Waiting</button>
-			</div>
-
+<form  id="waiting-form" style="font-size: 18px;">
+	<div>
+	<button type="submit" style="margin-left: 25px"
+					class="btn btn-primary">Allot with Waiting</button>
+	</div>
 		</form>
-		<button style="margin-top: 25px" id="express-toggle"
-			class="btn btn-secondary">Toggle Express Function</button>
 	</div>
 	<script>
 		$(document).ready(
@@ -148,6 +140,15 @@
 						event.preventDefault();
 						var vehicleNumber = $('#vehicle-number').val();
 						var estimatedTime = $('#estimated-time').val();
+						
+						if(vehicleNumber==""){
+							alert("Please Enter Vehicle Number");
+						}
+						
+						if(estimatedTime==""){
+							alert("Please Enter Estimated Time");
+
+						}
 
 						$.post("/allocateDock", {
 							vehicleNumber : vehicleNumber,
@@ -178,14 +179,15 @@
 					$('.express-toggle').click(
 							function() {
 								var dockId = $(this).data('dock-id');
-							    var isChecked = $(this).prop('checked');
+								var isChecked = $(this).prop('checked');
 
 								// You may need to identify the vehicle number associated with the specific UnDock button
-							//	var vehicleNumber = ""; // Add logic to retrieve vehicle number associated with this dock
-								$.post("/express/"+dockId+"/"+isChecked, function(response) {
-									alert(response);
-									location.reload();
-								});
+								//	var vehicleNumber = ""; // Add logic to retrieve vehicle number associated with this dock
+								$.post("/express/" + dockId + "/" + isChecked,
+										function(response) {
+											alert(response);
+											location.reload();
+										});
 							});
 
 					// Function to handle waiting allocation
@@ -193,6 +195,14 @@
 						event.preventDefault();
 						var vehicleNumber = $('#vehicle-number').val();
 						var estimatedTime = $('#estimated-time').val();
+						if(vehicleNumber==""){
+							alert("Please Enter Vehicle Number");
+						}
+						
+						if(estimatedTime==""){
+							alert("Please Enter Estimated Time");
+
+						}
 
 						$.post("/allocateDockWithWaiting", {
 							vehicleNumber : vehicleNumber,
@@ -203,16 +213,10 @@
 						});
 					});
 
-					// Function to toggle express function
-					$('#express-toggle').click(function() {
-						// Add your logic for express function toggle here
-						alert('Express function toggled');
-					});
-
 					// Function to refresh dock status every couple of minutes
 					setInterval(function() {
 						location.reload();
-					}, 120000);
+					}, 60000);
 				});
 	</script>
 </body>

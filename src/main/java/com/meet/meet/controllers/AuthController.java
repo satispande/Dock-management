@@ -80,6 +80,6 @@ public class AuthController extends AbstractController {
             "Registration completed succesfully"
         );
 
-        return "redirect:/groups";
+        return "redirect:/login";
     }
 }

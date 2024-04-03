@@ -2,6 +2,7 @@ package com.meet.meet.controllers;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.meet.meet.models.Dock;
+import com.meet.meet.models.DockPOJO;
 import com.meet.meet.models.DockVehicleAllocation;
 import com.meet.meet.repositories.DockRepository;
 import com.meet.meet.repositories.DockVehicleAllocationRepository;
@@ -33,18 +35,48 @@ public class DockController {
 	@GetMapping("/docks")
 	public String index(Model model) {
 		List<Dock> docks = dockRepository.findAll();
-
+		List<DockPOJO> dockPOJOList=new ArrayList();
 		for (Dock dock : docks) {
+		
+			
 			List<DockVehicleAllocation> activeAllocations = dockVehicleAllocationRepository
 					.findByIsActiveTrueAndDock(dock);
-			dock.setActiveAllocations(activeAllocations);
+			
+			if(activeAllocations!=null && activeAllocations.isEmpty()==false) {
+				for(DockVehicleAllocation dva:activeAllocations) {
+					DockPOJO dockPOJO=new DockPOJO();
+					dockPOJO.setId(dock.getId());
+					dockPOJO.setActive(dock.isActive());
+					dockPOJO.setDockNumber(dock.getDockNumber());
+					dockPOJO.setExpress(dock.isExpress());
+					dockPOJO.setVehicleNumber(dva.getVehicleNumber());
+					dockPOJO.setAllocationId(dva.getId());
+					dockPOJO.setEstimatedTime(calculateRemainingTime(dva));
+					dockPOJOList.add(dockPOJO);
+			//		dockPOJO.setWaitingTime(null);
+					
+				}
+			}
+			else {
+				DockPOJO dockPOJO=new DockPOJO();
+				dockPOJO.setId(dock.getId());
+				dockPOJO.setActive(dock.isActive());
+				dockPOJO.setDockNumber(dock.getDockNumber());
+				dockPOJO.setExpress(dock.isExpress());
+				dockPOJOList.add(dockPOJO);
+
+			}
+		
+			//dock.setActiveAllocations(activeAllocations);
 		}
-		model.addAttribute("docks", docks);
+		
+		
+		model.addAttribute("docks", dockPOJOList);
 		return "index";
 	}
 
 	@PostMapping("/allocateDock")
-	public ResponseEntity<String> allocateDock(@RequestParam String vehicleNumber,@RequestParam Long estimatedTimeForCompletion) {
+	public ResponseEntity<String> allocateDock(@RequestParam String vehicleNumber,@RequestParam Long estimatedTime) {
 		
 		List<Dock> availableDocks = dockRepository.findByIsActiveTrue();
 		
@@ -58,7 +90,7 @@ public class DockController {
 			allocation.setVehicleNumber(vehicleNumber);
 			allocation.setDockTime(LocalDateTime.now());
 			allocation.setActive(true);
-			allocation.setEstimatedTime(estimatedTimeForCompletion);
+			allocation.setEstimatedTime(estimatedTime);
 			dockVehicleAllocationRepository.save(allocation);
 
 		} else {
@@ -82,7 +114,7 @@ public class DockController {
 							allocation.setVehicleNumber(vehicleNumber);
 							allocation.setDockTime(LocalDateTime.now());
 							allocation.setActive(true);
-							allocation.setEstimatedTime(estimatedTimeForCompletion);
+							allocation.setEstimatedTime(estimatedTime);
 							dockVehicleAllocationRepository.save(allocation);
 							return ResponseEntity.ok().body("Successfully Allocated");
 
@@ -135,7 +167,7 @@ public class DockController {
 
 	@PostMapping("/allocateDockWithWaiting")
 	public ResponseEntity<String> allocateDockWithWaiting(
-			@RequestParam String vehicleNumber) {
+			@RequestParam String vehicleNumber,@RequestParam Long estimatedTime) {
 		// Find an available dock
 
 		// Check if the dock is already allocated
@@ -152,7 +184,10 @@ public class DockController {
 			allocation.setVehicleNumber(vehicleNumber);
 			allocation.setDockTime(LocalDateTime.now());
 			allocation.setActive(true);
+			allocation.setEstimatedTime(estimatedTime);
 			dockVehicleAllocationRepository.save(allocation);
+			return ResponseEntity.ok().body("Successfully Allocated");
+
 
 		} else {
 			// Calculate the undock time based on the waiting time
@@ -174,8 +209,10 @@ public class DockController {
 				allocation.setVehicleNumber(vehicleNumber);
 				allocation.setDockTime(LocalDateTime.now());
 				allocation.setActive(true);
-				allocation.setEstimatedTime(shortestWaitingDock.get().getWaitTime());
+				allocation.setEstimatedTime(estimatedTime+shortestWaitingDock.get().getWaitTime());
+				allocation.setWaitingTime(estimatedTime+shortestWaitingDock.get().getWaitTime());
 				dockVehicleAllocationRepository.save(allocation);
+				return ResponseEntity.ok().body("Successfully Allocated");
 
 //			List<Dock> docks = dockRepository.findAll();
 //
@@ -202,7 +239,7 @@ public class DockController {
 		}
 
 //    else {
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No available dock found");
+	//	return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No available dock found");
 //        }
 
 	}
