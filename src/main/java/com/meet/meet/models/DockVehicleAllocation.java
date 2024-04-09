@@ -1,6 +1,7 @@
 package com.meet.meet.models;
 
 import java.time.LocalDateTime;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -10,28 +11,35 @@ import jakarta.persistence.ManyToOne;
 
 @Entity
 public class DockVehicleAllocation {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "dock_id")
-    private Dock dock;
+	@ManyToOne
+	@JoinColumn(name = "dock_id")
+	private Dock dock;
 
-    private String vehicleNumber;
+	private String vehicleNumber;
+	
+	private String vehicleTag;
 
-    private LocalDateTime dockTime;
+	public String getVehicleTag() {
+		return vehicleTag;
+	}
 
-    private LocalDateTime undockTime;
-    
-    private boolean isActive;
-    
-    private Long estimatedTime;
-    
-    private Long waitingTime;
+	public void setVehicleTag(String vehicleTag) {
+		this.vehicleTag = vehicleTag;
+	}
 
+	private LocalDateTime dockTime;
 
+	private LocalDateTime undockTime;
 
+	private boolean isActive;
+
+	private Long estimatedTime;
+
+	private Long waitingTime;
 
 	public Long getWaitingTime() {
 		return waitingTime;
@@ -97,5 +105,5 @@ public class DockVehicleAllocation {
 		this.undockTime = undockTime;
 	}
 
-    // Getters and setters
+	// Getters and setters
 }

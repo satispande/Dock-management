@@ -50,9 +50,6 @@
 								class="dropdown-item" th:href="@{/login}">Login</a></li>
 							<li sec:authorize="!isAuthenticated()"><a
 								class="dropdown-item" th:href="@{/register}">Register</a></li>
-								<li sec:authorize="isAuthenticated()">
-                <a class="dropdown-item" th:href="@{/dockTag}">Dock with Tag</a>
-              </li>
 							<li sec:authorize="isAuthenticated()"><a
 								class="dropdown-item" th:href="@{/logout}">Logout</a></li>
 							<li><hr class="dropdown-divider" /></li>
@@ -69,6 +66,7 @@
 				<tr>
 					<th>Dock Number</th>
 					<th>Status</th>
+					<th>Vehicle Tag</th>
 					<th>Vehicle Number</th>
 					<th>ETA</th>
 					<th>Action</th>
@@ -77,62 +75,67 @@
 			</thead>
 			<tbody>
 				<tr th:each="dock, rowStat : ${docks}"
-					class="${rowStat.odd ? 'table-primary' : 'table-secondary'}">
+					    th:class="${dock.estimatedTime}==0 ? 'table-primary' : 'table-secondary'">
+
 					<td th:text="${dock.dockNumber}" class="align-middle">Dock
 						Number</td>
 					<td th:text="${dock.isActive ? 'Empty' : 'Occupied'}"
 						class="align-middle">Status</td>
+					<td class="align-middle"><span th:text="${dock.vehicleTag}">
+					</span></td>
 					<td class="align-middle"><span th:text="${dock.vehicleNumber}">
 					</span></td>
 					
-					<td class="align-middle"><span th:text="${dock.estimatedTime}">
+					<td class="align-middle"><span th:if="${dock.estimatedTime != null and dock.estimatedTime != ''}" th:text="${dock.estimatedTime} + ' min'">
 					</span></td>
 					
 					<td class="align-middle">
-						<button class="btn btn-danger undock-btn"
+						<button style="width: 80px" th:if="${dock.estimatedTime != null and dock.estimatedTime != ''}" class="btn btn-danger undock-btn"
 							th:attr="data-dock-id=${dock.allocationId}" th:text="UnDock">
 						</button>
 						&nbsp;&nbsp;
 						<span class=" form-switch">
 							<input type="checkbox" class="form-check-input express-toggle"
 								th:attr="data-dock-id=${dock.id}" th:checked="${dock.isExpress}">
-							<label class="form-check-label">Express Dock</label>
+							<label class="form-check-label">Express</label>
+						</span>
+						<span class=" form-switch">
+							<input type="checkbox" class="form-check-input disable-toggle"
+								th:attr="data-dock-id=${dock.id}" th:checked="${dock.isDisabled}">
+							<label class="form-check-label">Disabled</label>
 						</span>
 					</td>
-
-
 					
-
-
-					<td class="align-middle">
-						
-					</td>
 				</tr>
 			</tbody>
 		</table>
 
 		<form  id="allot-form" style="font-size: 18px;">
 			<div class="form-group  d-flex">
-				<label for="vehicle-number" style="width: 15%">Vehicle
+				<label for="vehicle-number" style="width: 12%">Vehicle
 					Number:</label> <input type="text" class="form-control" id="vehicle-number"
-					style="width: 25%" name="vehicleNumber" required> &nbsp;&nbsp;&nbsp;&nbsp; <label
-					for="waiting-time" style="width: 25%">Estimated Completion
+					style="width: 15%" name="vehicleNumber" required> &nbsp;&nbsp;&nbsp;&nbsp;
+					<label for="vehicle-tag" style="width: 10%">Vehicle
+					Tag:</label> <input type="text" class="form-control" id="vehicle-tag"
+					style="width: 10%" name="vehicleTag" required> &nbsp;&nbsp;&nbsp;&nbsp; 
+					<label for="waiting-time" style="width: 20%">Unloading
 					Time (in minutes):</label> <input type="number" class="form-control"
 					id="estimated-time" name="estimatedTime" min="0" step="1"
 					style="width: 10%">
+					<span class=" form-switch" style="width: 15%">
+							&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" class="form-check-input disable-toggle" id="is3PDock" name="is3PDock"
+								>
+							<label class="form-check-label">Is 3P Vehicle</label>
+						</span>
 				<button type="submit" style="margin-left: 25px"
 					class="btn btn-primary">Allot</button>
 				
 
 			</div>
+			<br/>
 		</form>
 
-<form  id="waiting-form" style="font-size: 18px;">
-	<div>
-	<button type="submit" style="margin-left: 25px"
-					class="btn btn-primary">Allot with Waiting</button>
-	</div>
-		</form>
+
 	</div>
 	<script>
 		$(document).ready(
@@ -143,21 +146,29 @@
 						event.preventDefault();
 						var vehicleNumber = $('#vehicle-number').val();
 						var estimatedTime = $('#estimated-time').val();
-						
+						var vehicleTag = $('#vehicle-tag').val();
+						var is3PDock = $('#is3PDock').prop('checked');
+
 						if(vehicleNumber==""){
 							alert("Please Enter Vehicle Number");
 							return;
+
 						}
 						
 						if(estimatedTime==""){
 							alert("Please Enter Estimated Time");
 							return;
-
+						}
+						if(vehicleTag==""){
+							alert("Please Enter Vehicle Tag");
+							return;
 						}
 
-						$.post("/allocateDock", {
+						$.post("/allocateDockTagWithWaiting", {
 							vehicleNumber : vehicleNumber,
-							estimatedTime : estimatedTime
+							estimatedTime : estimatedTime,
+							vehicleTag : vehicleTag,
+							is3PDock : is3PDock
 						}).done(function(response) {
 							// Success callback
 							alert(response);
@@ -194,6 +205,20 @@
 											location.reload();
 										});
 							});
+					
+					$('.disable-toggle').click(
+							function() {
+								var dockId = $(this).data('dock-id');
+								var isChecked = $(this).prop('checked');
+
+								// You may need to identify the vehicle number associated with the specific UnDock button
+								//	var vehicleNumber = ""; // Add logic to retrieve vehicle number associated with this dock
+								$.post("/disable/" + dockId + "/" + isChecked,
+										function(response) {
+											alert(response);
+											location.reload();
+										});
+							});
 
 					// Function to handle waiting allocation
 					$('#waiting-form').submit(function(event) {
@@ -202,12 +227,10 @@
 						var estimatedTime = $('#estimated-time').val();
 						if(vehicleNumber==""){
 							alert("Please Enter Vehicle Number");
-							return;
 						}
 						
 						if(estimatedTime==""){
 							alert("Please Enter Estimated Time");
-							return;
 
 						}
 

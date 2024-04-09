@@ -144,6 +144,19 @@ public class DockController {
 		return ResponseEntity.ok().body("Successfull");
 
 	}
+	
+	@PostMapping("/disable/{dockId}/{value}")
+	public ResponseEntity<String> disableDock(@PathVariable Long dockId, @PathVariable String value) {
+		Dock dock = dockRepository.findById(dockId).get();
+		if (value.equalsIgnoreCase("true")) {
+			dock.setDisabled(true);
+		} else {
+			dock.setDisabled(false);
+		}
+		dockRepository.save(dock);
+		return ResponseEntity.ok().body("Successfull");
+
+	}
 
 	@PostMapping("/undock/{id}")
 	public String undock(@PathVariable Long id) {
@@ -164,6 +177,8 @@ public class DockController {
 		}
 		return "redirect:/";
 	}
+	
+	
 
 	@PostMapping("/allocateDockWithWaiting")
 	public ResponseEntity<String> allocateDockWithWaiting(

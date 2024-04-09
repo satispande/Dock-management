@@ -32,7 +32,7 @@ public class SecurityConfig {
                             .authenticated()
             )
             .formLogin(form -> form.loginPage("/login")
-                                    .defaultSuccessUrl("/docks",true)
+                                    .defaultSuccessUrl("/dockTag",true)
                                     .loginProcessingUrl("/login")
                                     .failureUrl("/login?fail=true")
                                     .permitAll()

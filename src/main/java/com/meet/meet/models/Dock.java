@@ -9,27 +9,32 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Transient;
 
 @Entity
 public class Dock {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @Column(unique = true)
-    private String dockNumber;
+	@Column(unique = true)
+	private String dockNumber;
 
-    private boolean isActive;
-    
-    private boolean isExpress;
-    
-    @Transient
-    private long waitTime;
+	private boolean isActive;
 
-    
-    public long getWaitTime() {
+	private boolean isExpress;
+	
+	private boolean is3PDock;
+
+	private boolean isDisabled;
+
+
+	@Transient
+	private long waitTime;
+
+	public long getWaitTime() {
 		return waitTime;
 	}
 
@@ -46,8 +51,18 @@ public class Dock {
 	}
 
 	@OneToMany(mappedBy = "dock", cascade = CascadeType.ALL)
-    private List<DockVehicleAllocation> activeAllocations = new ArrayList<>();
+	private List<DockVehicleAllocation> activeAllocations = new ArrayList<>();
 
+//	@ManyToOne
+//	private DockMaster dockMaster;
+//
+//	public DockMaster getDockMaster() {
+//		return dockMaster;
+//	}
+//
+//	public void setDockMaster(DockMaster dockMaster) {
+//		this.dockMaster = dockMaster;
+//	}
 
 	public List<DockVehicleAllocation> getActiveAllocations() {
 		return activeAllocations;
@@ -81,5 +96,21 @@ public class Dock {
 		this.isActive = isActive;
 	}
 
-    // Getters and setters
+	public boolean isIs3PDock() {
+		return is3PDock;
+	}
+
+	public void setIs3PDock(boolean is3pDock) {
+		is3PDock = is3pDock;
+	}
+
+	public boolean isDisabled() {
+		return isDisabled;
+	}
+
+	public void setDisabled(boolean isDisabled) {
+		this.isDisabled = isDisabled;
+	}
+
+	// Getters and setters
 }

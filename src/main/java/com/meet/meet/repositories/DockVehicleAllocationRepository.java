@@ -14,5 +14,8 @@ public interface DockVehicleAllocationRepository extends JpaRepository<DockVehic
 	boolean existsByDockAndUndockTimeIsNull(Dock dock);
 	
     List<DockVehicleAllocation> findByIsActiveTrueAndDock(Dock dock);
+    
+	List<DockVehicleAllocation> findByIsActiveTrueAndUndockTimeIsNullAndWaitingTimeIsNotNull();
+
 
 }

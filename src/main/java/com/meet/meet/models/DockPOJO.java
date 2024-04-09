@@ -13,15 +13,10 @@ public class DockPOJO {
     
     private boolean isActive;
 
-    
-    public boolean isActive() {
-		return isActive;
-	}
+    private boolean is3PDock;
 
-	public void setActive(boolean isActive) {
-		this.isActive = isActive;
-	}
-
+	private boolean isDisabled;
+	
 	private Long allocationId;
 
     private String vehicleNumber;
@@ -34,7 +29,15 @@ public class DockPOJO {
     
     private Long waitingTime;
     
+	private String vehicleTag;
 
+	public String getVehicleTag() {
+		return vehicleTag;
+	}
+
+	public void setVehicleTag(String vehicleTag) {
+		this.vehicleTag = vehicleTag;
+	}
     public Long getId() {
 		return id;
 	}
@@ -106,4 +109,30 @@ public class DockPOJO {
 	public void setWaitingTime(Long waitingTime) {
 		this.waitingTime = waitingTime;
 	}
+
+	public boolean isIs3PDock() {
+		return is3PDock;
+	}
+
+	public void setIs3PDock(boolean is3pDock) {
+		is3PDock = is3pDock;
+	}
+
+	public boolean isDisabled() {
+		return isDisabled;
+	}
+
+	public void setDisabled(boolean isDisabled) {
+		this.isDisabled = isDisabled;
+	}
+	
+
+    public boolean isActive() {
+		return isActive;
+	}
+
+	public void setActive(boolean isActive) {
+		this.isActive = isActive;
+	}
+
 }
